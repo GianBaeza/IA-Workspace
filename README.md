@@ -123,6 +123,28 @@ una ceremonia). Pagás el salto del orquestador solo cuando el problema es genui
 multi-dominio o la intención no está clara. Cuando el dominio es obvio, el especialista
 va directo al trabajo.
 
+### El costo real de delegar vía ORCHESTRATOR
+
+Los agentes especializados se registran en `opencode.json` (y se invocan directo, sin
+pasar por el orquestador) porque orquestar una tarea de dominio claro es una doble pasada
+de LLM innecesaria:
+
+1. **Hop extra**: el orquestador lee el pedido completo, lo clasifica, arma el prompt de
+   delegación y lo envía al subagente vía `Task`. Eso es una pasada completa de LLM
+   (tokens de entrada + salida + latencia) que no aporta nada si ya se sabe qué agente
+   tiene que trabajar.
+2. **Contexto filtrado**: el subagente no recibe el pedido original tal cual, sino la
+   interpretación que el orquestador decidió pasarle. Eso puede perder matices del prompt
+   original y del historial de la conversación.
+3. **Overhead marginal de instrucciones**: las instrucciones de routing del orquestador
+   (`agents/ORCHESTRATOR.md`) se suman al system prompt cuando se lo usa. No es el costo
+   dominante — el contexto fijo (AGENTS.md, skill descriptions, MCP) se paga igual con
+   cualquier agente — pero es parte del paquete.
+
+Cuando el dominio es obvio, invocar al especialista directamente elimina los tres costos
+y el contexto llega íntegro; el orquestador queda reservado para los casos donde su
+clasificación y síntesis realmente agregan valor.
+
 ## Instalación en una máquina nueva
 
 ```bash
