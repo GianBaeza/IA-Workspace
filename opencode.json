@@ -1,0 +1,55 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "model": "anthropic/claude-sonnet-4-6",
+
+  "experimental": {
+    "enableAgents": true
+  },
+
+  "mcp": {
+    "engram": {
+      "type": "local",
+      "command": ["engram", "mcp"],
+      "enabled": true
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
+      "enabled": true
+    }
+  },
+
+  "agents": {
+    "orchestrator": {
+      "name": "ORCHESTRATOR",
+      "description": "Root agent. Classifies the domain and delegates to the right specialist.",
+      "instructions": "~/.config/opencode/agents/ORCHESTRATOR.md",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "frontend-agent": {
+      "name": "FRONTEND",
+      "description": "React, Next.js, Vanilla JS, HTML, CSS, Tailwind specialist.",
+      "instructions": "~/.config/opencode/agents/FRONTEND.md",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "backend-agent": {
+      "name": "BACKEND",
+      "description": "Hono, Express, TypeScript, REST APIs, Clean Architecture specialist.",
+      "instructions": "~/.config/opencode/agents/BACKEND.md",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "database-agent": {
+      "name": "DATABASE",
+      "description": "PostgreSQL, Prisma, MongoDB, Redis, Supabase, SQL Server specialist.",
+      "instructions": "~/.config/opencode/agents/DATABASE.md",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "infra-agent": {
+      "name": "INFRA",
+      "description": "Docker, CI/CD, GitLab, security, infrastructure specialist.",
+      "instructions": "~/.config/opencode/agents/INFRA.md",
+      "model": "anthropic/claude-sonnet-4-6"
+    }
+  }
+}

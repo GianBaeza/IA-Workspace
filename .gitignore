@@ -1,0 +1,15 @@
+# Dependencies — reinstalled with `npm install` on each machine
+node_modules
+
+# Lockfiles for other package managers
+bun.lock
+pnpm-lock.yaml
+yarn.lock
+
+# Never commit secrets
+.env
+.env.*
+!.env.example
+
+# OS noise
+.DS_Store
