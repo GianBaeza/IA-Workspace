@@ -3,6 +3,7 @@
   "plugin": [
     "opencode-sdd-engram-manage",
     "opencode-subagent-statusline",
-    "/home/gianbaeza/.config/opencode/tui-plugins/gentle-logo.tsx"
+    "/home/gianbaeza/.config/opencode/tui-plugins/gentle-logo.tsx",
+    "./plugins/token-tracker.tsx"
   ]
 }

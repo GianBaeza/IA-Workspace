@@ -1,10 +1,70 @@
 {
   "$schema": "https://opencode.ai/config.json",
 
-  "model": "anthropic/claude-sonnet-4-6",
+  "model": "opencode/big-pickle",
 
   "experimental": {
     "enableAgents": true
+  },
+
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git show*": "allow",
+      "git rev-parse*": "allow",
+      "git ls-files*": "allow",
+      "git branch --show-current*": "allow",
+      "git branch --list*": "allow",
+      "git branch -a*": "allow",
+      "git branch -vv*": "allow",
+      "git remote -v*": "allow",
+      "git remote get-url*": "allow",
+      "git symbolic-ref*": "allow",
+      "git show-ref*": "allow",
+      "git config --get*": "allow",
+      "git config --list*": "allow",
+      "pnpm lint*": "allow",
+      "pnpm exec lint*": "allow",
+      "pnpm typecheck*": "allow",
+      "pnpm exec tsc*": "allow",
+      "pnpm exec tsc --*": "allow",
+      "pnpm test*": "allow",
+      "pnpm exec playwright*": "allow",
+      "pnpm build*": "allow",
+      "pnpm dev*": "allow",
+      "pnpm start*": "allow",
+      "npm run lint*": "allow",
+      "npm run typecheck*": "allow",
+      "npm test*": "allow",
+      "npm run build*": "allow",
+      "npm run dev*": "allow",
+      "npm start*": "allow",
+      "yarn run lint*": "allow",
+      "yarn run typecheck*": "allow",
+      "yarn test*": "allow",
+      "yarn run build*": "allow",
+      "bun run lint*": "allow",
+      "bun run typecheck*": "allow",
+      "bun test*": "allow",
+      "bun run build*": "allow",
+      "npx tsc*": "allow",
+      "npx eslint*": "allow",
+      "npx prettier --check*": "allow",
+      "npx -y lighthouse*": "allow",
+      "npx lighthouse*": "allow",
+      "git commit*": "deny",
+      "git push*": "deny",
+      "git reset --hard*": "deny",
+      "git clean*": "deny",
+      "git rm*": "deny",
+      "git rebase*": "deny",
+      "rm -rf*": "deny",
+      "rm -fr*": "deny",
+      "sudo rm*": "deny"
+    }
   },
 
   "mcp": {
@@ -25,31 +85,37 @@
       "name": "ORCHESTRATOR",
       "description": "Root agent. Classifies the domain and delegates to the right specialist.",
       "instructions": "~/.config/opencode/agents/ORCHESTRATOR.md",
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "opencode/big-pickle"
     },
     "frontend-agent": {
       "name": "FRONTEND",
-      "description": "React, Next.js, Vanilla JS, HTML, CSS, Tailwind specialist.",
+      "description": "Senior frontend architect — React, Next.js App Router, TypeScript strict, Tailwind, Docker. Teaches while implementing, explains every architecture decision.",
       "instructions": "~/.config/opencode/agents/FRONTEND.md",
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "opencode/big-pickle"
     },
     "backend-agent": {
       "name": "BACKEND",
       "description": "Hono, Express, TypeScript, REST APIs, Clean Architecture specialist.",
       "instructions": "~/.config/opencode/agents/BACKEND.md",
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "opencode/big-pickle"
     },
     "database-agent": {
       "name": "DATABASE",
       "description": "PostgreSQL, Prisma, MongoDB, Redis, Supabase, SQL Server specialist.",
       "instructions": "~/.config/opencode/agents/DATABASE.md",
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "opencode/big-pickle"
     },
     "infra-agent": {
       "name": "INFRA",
       "description": "Docker, CI/CD, GitLab, security, infrastructure specialist.",
       "instructions": "~/.config/opencode/agents/INFRA.md",
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "opencode/big-pickle"
+    },
+    "mockup-orchestrator": {
+      "name": "MOCKUP-ORCHESTRATOR",
+      "description": "Analiza mockups HTML estáticos, indexa la arquitectura del proyecto y produce un plan de decomposición en componentes React con estrategia de rendering (SSR/SSG/ISR/CSR). Invocar cuando se quiere convertir un mockup HTML en componentes Next.js respetando la arquitectura existente.",
+      "instructions": "~/.config/opencode/agents/MOCKUP-ORCHESTRATOR.md",
+      "model": "opencode/big-pickle"
     }
   }
 }

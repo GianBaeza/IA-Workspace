@@ -8,11 +8,11 @@ Each technology has its own best practices storage in Engram. These practices ar
 
 | Technology | Topic Key | Specialist Agent |
 |------------|-----------|------------------|
-| Angular | `angular/best-practices` | angular-specialist |
-| React | `react/best-practices` | react-specialist |
-| Next.js | `nextjs/best-practices` | nextjs-specialist |
-| Django | `django/best-practices` | django-specialist |
-| Express | `express/best-practices` | express-specialist |
+| Angular | `angular/best-practices` | ANGULAR-SPECIALIST |
+| React | `react/best-practices` | REACT-SPECIALIST |
+| Next.js | `nextjs/best-practices` | NEXTJS-SPECIALIST |
+| Django | `django/best-practices` | DJANGO-SPECIALIST |
+| Express | `express/best-practices` | EXPRESS-SPECIALIST |
 
 ## How to Save a Best Practice
 

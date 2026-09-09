@@ -30,6 +30,7 @@ Un stack de asistente de programación con IA construido sobre
 ├── agents/                  # 16 definiciones de agentes (dos formatos, ver abajo)
 ├── skills/                  # 69 directorios de skills (74 archivos SKILL.md)
 ├── plugins/                 # 6 plugins: memoria, skill registry, SDD, estado TUI
+├── scripts/                 # Plantilla global parse-html.mjs (se copia a cada proyecto)
 ├── commands/                # 12 comandos slash (ciclo de vida SDD, tooling de skills)
 ├── profiles/                # Perfiles de OpenCode (actualmente vacío)
 ├── tui.json                 # Carga de plugins de la TUI
@@ -44,12 +45,12 @@ Un stack de asistente de programación con IA construido sobre
 
 ### Config central — `opencode.json`
 
-- Modelo por defecto: `anthropic/claude-sonnet-4-6`
+- Modelo por defecto: `opencode/big-pickle` (OpenCode Zen, free)
 - `experimental.enableAgents` — activa el sistema de agentes
 - Dos servidores MCP:
   - **engram** — memoria persistente respaldada por un binario Go local + SQLite
   - **context7** — documentación actualizada de librerías/frameworks
-- Cinco agentes registrados, cada uno apuntando a un archivo de instrucciones con una
+- Seis agentes registrados (ORCHESTRATOR, FRONTEND, BACKEND, DATABASE, INFRA, MOCKUP-ORCHESTRATOR), cada uno apuntando a un archivo de instrucciones con una
   **ruta absoluta** (`~/.config/opencode/agents/*.md`) — por eso clonar en la misma
   ruta exacta hace que todo funcione en una máquina nueva.
 
@@ -57,8 +58,8 @@ Un stack de asistente de programación con IA construido sobre
 
 | Formato | Cómo se carga | Ejemplos |
 |---|---|---|
-| **Agentes registrados** | Markdown plano, cableados en `opencode.json` | Siempre disponibles en la lista de agentes: ORCHESTRATOR, FRONTEND, BACKEND, DATABASE, INFRA |
-| **Especialistas (subagentes)** | Frontmatter (`name`, `description`, `license`) | Bajo demanda, vía la herramienta `Task` (`subagent_type`): react-specialist, nextjs-specialist, express-specialist, django-specialist, angular-specialist, accessibility-specialist, ux-ui-specialist, bruno-specialist, frontend-specialist, backend-specialist |
+| **Agentes registrados** | Markdown plano, cableados en `opencode.json` | Siempre disponibles en la lista de agentes: ORCHESTRATOR, FRONTEND, BACKEND, DATABASE, INFRA, MOCKUP-ORCHESTRATOR |
+| **Especialistas (subagentes)** | Frontmatter (`name`, `description`, `license`) | Bajo demanda, vía la herramienta `Task` (`subagent_type`): REACT-SPECIALIST, NEXTJS-SPECIALIST, EXPRESS-SPECIALIST, DJANGO-SPECIALIST, ANGULAR-SPECIALIST, ACCESSIBILITY-SPECIALIST, UX-UI-SPECIALIST, BRUNO-SPECIALIST, BACKEND-SPECIALIST |
 
 También está `BEST-PRACTICES-SYSTEM.md` — no es un agente ejecutable, sino el documento
 de *protocolo* que define cómo los agentes especialistas guardan y recuperan buenas
@@ -145,7 +146,153 @@ Cuando el dominio es obvio, invocar al especialista directamente elimina los tre
 y el contexto llega íntegro; el orquestador queda reservado para los casos donde su
 clasificación y síntesis realmente agregan valor.
 
-## Instalación en una máquina nueva
+## Cambios recientes (sesiones 2026-09)
+
+Tres decisiones modifican el estado descrito arriba; todas quedan versionadas en este repo.
+
+### 1. Nuevo orquestador de dominio: MOCKUP-ORCHESTRATOR
+
+Es un **orquestador de segundo nivel, dominio-específico**: no clasifica dominios generales
+(eso es del ORCHESTRATOR root), solo se activa para "analizar un mockup HTML → preparar su
+conversión a componentes React/Next.js". Registrado en `opencode.json` como
+`mockup-orchestrator`, con su lógica en `agents/MOCKUP-ORCHESTRATOR.md`.
+
+Pipeline (el detalle operativo completo vive en el archivo del agente):
+
+| Fase | Qué hace | Quién | Dónde persiste |
+|---|---|---|---|
+| **F0 — Indexación** | Construye el `codegraph.json`: arquitectura real del proyecto, convenciones, shared components, design tokens, defaults de rendering | El orquestador (find/grep/read + sampleo de 3-5 componentes) | `.opencode/architecture/codegraph.json` — una sola vez por proyecto |
+| **F1 — Parsing** | Analiza el DOM del mockup de forma **determinística** | Script `parse-html.mjs` (Node + jsdom vía Bash) | `/tmp/dom-analysis.json` — sin pasar HTML por el LLM |
+| **F2 — Plan** | Mapea DOM + codegraph a un `ComponentPlan`: boundaries server/client, Server Actions, hooks, estrategia de rendering (SSR/SSG/ISR/CSR) | El orquestador en rol NEXT-ARCHITECT | `.opencode/architecture/<MODULO>.plan.json` |
+| **F3 — Reporte** | Produce el análisis legible con decisiones y próximos pasos | El orquestador | `mockups/<archivo>.analysis.md` |
+
+Roles internos: HTML-PARSER y NEXT-ARCHITECT son **fases** que el orquestador asume, no
+agentes registrados por separado — se evita overhead de configuración y de hop. El orquestador
+**nunca escribe código**: la implementación la ejecuta FRONTEND en una sesión aparte leyendo
+el plan (que se commitea).
+
+### 2. Convención de carpetas de proyecto: `.opencode/` (adiós a `.claude/`)
+
+Todo lo que el pipeline genera vive en la raíz del proyecto bajo la convención nativa de
+opencode, no la de Claude Code:
+
+```
+mockups/                     ← mockups HTML (convención obligatoria)
+.opencode/architecture/      ← codegraph + planes (se commitean)
+.opencode/scripts/           ← parse-html.mjs (se commitea; plantilla global en scripts/)
+```
+
+Razón: el entorno es 100% opencode — no convive con Claude Code — y `.opencode/` es el
+directorio de configuración de proyecto de opencode. Los artefactos del pipeline se commitean
+para que codegraph y planes sean compartidos por el equipo y reaprovechados por futuras
+sesiones sin re-generarlos.
+
+### 3. Modelos: OpenCode Zen (`big-pickle`) como default, sin Anthropic directo
+
+Se eliminó `anthropic/claude-sonnet-4-6` del default y de todos los agentes:
+
+- **Default y todos los agentes registrados**: `opencode/big-pickle` (red Zen).
+- **Plan pagado a mano**: OpenCode Go (suscripción flat, modelos open code: GLM, Kimi, Qwen,
+  DeepSeek V4) — se asigna por agente cuando se necesita, con ids `opencode-go/<modelo>`.
+
+Beneficio: un solo proveedor, sin API keys de terceros; Zen ya está autenticado con login
+propio. Advertencia documentada: big-pickle es free "por tiempo limitado" y durante ese
+período los datos pueden usarse para mejorar el modelo (excepción a la política zero-retention
+de Zen) — ver trade-offs más abajo.
+
+---
+
+## Análisis de costos: orquestación vs especialista directo (con números)
+
+### Qué se paga siempre (contexto fijo)
+
+Cualquier request, con cualquier agente, paga el contexto base del system prompt: `AGENTS.md`,
+el índice de descripciones de las skills, las definiciones de las herramientas, los tools de
+MCP (engram, context7) y el protocolo inyectado por plugins. Estimado: **~20-35K tokens de
+entrada por request**. Este costo es idéntico usando orquestador o agente directo, así que
+**no entra en el delta** de la comparación — pero explica por qué el overhead de orquestar es
+marginal frente a la parte fija.
+
+### El hop del ORCHESTRATOR root
+
+Delegar una tarea de dominio claro vía el root siempre agrega una pasada extra de LLM:
+
+- el orquestador relee el pedido (0.5-2K in) y emite el prompt de delegación (0.3-1K out);
+- sus instrucciones de routing entran al system prompt (~600 tokens);
+- el subagente arranca contexto nuevo desde cero.
+
+**Costo del hop: ≈ 2-4K tokens.** Confirma lo que ya dice la tabla de arriba: *siempre* pasar
+por el root es derroche cuando el dominio es obvio. Pero es un derroche **pequeño** comparado
+con equivocar el routing: una tarea mal derivada puede gastar 50-200K tokens en trabajo
+descartado. Por eso el root se reserva para ambigüedad y cross-domain.
+
+### Caso aplicado: MOCKUP-ORCHESTRATOR vs FRONTEND directo
+
+Supuestos: mockup típico de 100-300KB de HTML, proyecto Next.js mediano, ~4 caracteres por
+token en HTML crudo. Son estimaciones de orden de magnitud, no mediciones.
+
+| Paso | FRONTEND directo (sin pipeline) | Pipeline MOCKUP-ORCHESTRATOR |
+|---|---|---|
+| Entender el mockup | LLM lee el HTML crudo: **25-75K tokens**, con riesgo de "leerlo mal" (anidamiento, tablas) → rework | `parse-html.mjs` lo analiza en Node: **~0 tokens** de LLM; solo entra el JSON estructurado: **2-8K** |
+| Conocer la arquitectura | Re-escanear el repo en cada sesión: **20-40K** | Leer el codegraph persistido: **3-8K** (generarlo cuesta 30-50K, amortizado una vez por proyecto) |
+| Decidir componentes y rendering | Razonamiento libre, posible duplicación de componentes existentes, 1-2 correcciones: **30-100K** | Reglas determinísticas (boundaries, repetición, reutilización): **3-10K** |
+| Persistencia | Nada: hay que rehacerlo en cada sesión | `plan.json` + `analysis.md` commiteados: **0** |
+| **Total por mockup** | **~100-200K tokens** | **~10-30K tokens** |
+
+**Escenario: 3 mockups del mismo proyecto.**
+
+- Directo: 3 × 150K ≈ **450K tokens**.
+- Pipeline: 40K (codegraph, una sola vez) + 3 × 20K = **100K tokens**.
+- **Ahorro ≈ 78% del input** — y crece con cada mockup adicional, porque la fuente de verdad
+  (codegraph) nunca se re-genera.
+
+**Break-even:** el codegraph cuesta lo mismo que un escaneo directo; desde el **2º mockup** el
+pipeline es netamente más barato.
+
+### Beneficios más allá de los tokens
+
+1. **Determinismo en el parsing** — el LLM nunca "lee" el HTML; el script lo estructura. Se
+   elimina la alucinación estructural y sus loops de rework.
+2. **Persistencia compartida** — codegraph y planes se commitean: otras sesiones y otros devs
+   no repagan el análisis.
+3. **Reutilización asistida** — el codegraph conoce `sharedComponents`; el pipeline evita
+   proponer duplicados (menos trabajo para FRONTEND en la implementación).
+4. **Menos contexto por turno → menos compactaciones** — reducir input disminuye el riesgo de
+   perder matices por auto-compaction agresiva.
+5. **Separación análisis/implementación** — el orquestador nunca escribe código; FRONTEND
+   ejecuta con un plan cerrado. Menos ida y vuelta, menos decisiones improvisadas.
+6. **Metricable** — el pipeline deja artefactos JSON que sirven como registro de decisión y
+   para medir (por ejemplo, `reuseCount`, `clientComponentCount`).
+
+### No-beneficios y cuando NO conviene (trade-offs aplicados)
+
+| Limitación | Impacto |
+|---|---|
+| Setup fijo por proyecto | `mkdir mockups .opencode/...`, `npm i -D jsdom`, commitear artefactos — costo chico pero real |
+| Un solo mockup chico, aislado | El pipeline es overkill; FRONTEND directo es más rápido |
+| Parser acotado (profundidad 6, top-20 patrones) | DOMs muy anidados o sin tags semánticos degradan el plan |
+| Solo HTML estático | No Figma, no imágenes; la limitación se reporta, no se "inventa" |
+| Mantenimiento del codegraph | Si la arquitectura cambia hay que re-indexar a pedido; el orquestador NO lo re-indexa solo (regla explícita) |
+| Dependencia nueva | `jsdom` en devDependencies de cada proyecto |
+| Modelo gratuito transitorio | big-pickle es free "por tiempo limitado"; durante el free period los datos pueden usarse para mejorar el modelo |
+
+### Regla de decisión resultante
+
+| Caso | Qué usar |
+|---|---|
+| 2+ mockups por proyecto, mockup HTML | **MOCKUP-ORCHESTRATOR** (ahorro ~78% de input + determinismo) |
+| 1 mockup trivial aislado | FRONTEND directo |
+| Feature multi-dominio o pedido ambiguo | ORCHESTRATOR root |
+| Tarea de dominio claro y acotado | Agente especialista directo |
+| Especialización puntual en medio de una tarea | `Task` + subagente con frontmatter |
+
+**Conclusión.** La pregunta no es "orquestador o directo" en abstracto, sino **dónde vive el
+determinismo**. Cuando el trabajo puede ejecutarse con scripts y estructura (parsear, indexar,
+decisión por reglas), el LLM no debe pagarlas por token: un orquestador de dominio que
+orquesta herramientas y deja al LLM solo la decisión arquitectónica sale más barato que el
+especialista directo que hace todo en contexto. Cuando no hay pipeline que automatizar, el
+costo del hop (2-4K tokens) no justifica el viaje y el especialista directo gana. Esta es la
+razón por la que el ecosistema tiene ambos, deliberadamente.
 
 ```bash
 # 1. Instalar OpenCode
