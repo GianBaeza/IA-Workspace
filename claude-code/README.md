@@ -1,9 +1,12 @@
 # Claude Code environment
 
+> Este repo también tiene un entorno para OpenCode, en [`../opencode/`](../opencode/README.md).
+> Ver [`../README.md`](../README.md) para la vista general de ambos.
+
 Equivalente, para [Claude Code](https://code.claude.com), del ecosistema OpenCode que
-vive en la raíz de este repo. Vive en su propia carpeta a propósito: **no reemplaza ni
-toca** `agents/`, `skills/`, `plugins/`, `opencode.json`, etc. — ese config sigue siendo
-el de OpenCode. Esto es un segundo entorno, para el mismo repo, para el otro CLI.
+vive en [`../opencode/`](../opencode/README.md). Vive en su propia carpeta a propósito:
+**no reemplaza ni toca** nada de esa carpeta — es un segundo entorno, para el mismo
+repo, para el otro CLI.
 
 ## Instalación
 
