@@ -44,11 +44,13 @@ claude-code/
 │   ├── infra.md                 # /infra <tarea>
 │   ├── frontend.md               # /frontend <tarea>
 │   └── backend.md                 # /backend <tarea>
-└── skills/                       # 9 skills, una por tecnología
-    ├── nextjs/ react/ tailwind/   # frontend
-    ├── express/ nodejs-backend/    # backend
-    ├── typescript/ zod/ vitest-playwright/   # compartidas
-    └── docker-cicd/                 # infra
+└── skills/                       # 11 skills commiteadas (+ 3 de Vercel solo referenciadas, ver abajo)
+    ├── nextjs/ react/ tailwind/                # frontend — propias
+    ├── express/ nodejs-backend/                  # backend — propias
+    ├── typescript/ zod/ vitest-playwright/         # compartidas — propias
+    ├── docker-pro/                                   # infra — de terceros (Bret Fisher, MIT)
+    ├── github-actions-workflow-pro/                    # infra — de terceros (Bret Fisher, MIT)
+    └── gha-audit/                                        # infra — de terceros (Bret Fisher, MIT)
 ```
 
 ## Cómo se decide qué especialista trabaja
@@ -73,6 +75,69 @@ Existen tres formas reales de elegir el especialista:
 Las **skills** (`skills/*/SKILL.md`) se cargan solas cuando la tarea coincide con su
 `description` — no hace falta invocarlas a mano, pero también se puede con
 `/nextjs`, `/express`, etc. si querés forzar que se lean.
+
+## Skills de terceros — el ecosistema abierto de Agent Skills
+
+Seis skills no se escribieron a mano: se instalaron con [`npx skills`](https://skills.sh)
+(`vercel-labs/skills`), la CLI abierta que instala/actualiza skills de Claude Code (y
+18+ agentes más) desde cualquier repo de GitHub. Se usó en vez de escribir todo a mano
+porque para reglas de performance y seguridad que cambian seguido, una fuente mantenida
+activamente por quien más sabe del tema (el equipo de React/Next.js de Vercel, un
+Docker Captain) envejece mejor que notas propias congeladas en una fecha.
+
+**Tres se commitean acá** (`bretfisher/skills`, licencia MIT — sin problema para un
+repo público):
+
+| Skill | Reemplazó a |
+|---|---|
+| `docker-pro` | la skill `docker-cicd` escrita a mano |
+| `github-actions-workflow-pro` | parte de `docker-cicd` |
+| `gha-audit` | parte de `docker-cicd` |
+
+**Tres NO se commitean acá** (`vercel-labs/agent-skills`, repo sin archivo `LICENSE` —
+este repo es público, así que en vez de redistribuir contenido sin licencia clara,
+quedan solo referenciadas; instalalas vos en tu propia máquina):
+
+```bash
+npx skills add vercel-labs/agent-skills \
+  --skill vercel-react-best-practices vercel-composition-patterns web-design-guidelines \
+  -a claude-code -g --copy -y
+```
+
+| Skill | Qué agrega |
+|---|---|
+| `vercel-react-best-practices` | 60+ reglas de performance React/Next.js — server-side data fetching, `after()`, caching, auth en Server Actions, rendering, bundle |
+| `vercel-composition-patterns` | Arquitectura de componentes — compound components, evitar boolean-prop proliferation, refs React 19 |
+| `web-design-guidelines` | Revisión de UI/UX contra Web Interface Guidelines — accesibilidad, performance, interacción |
+
+`frontend-specialist.md` las referencia en su tabla de skills asumiendo que están
+instaladas — si cloná este repo y no corriste el comando de arriba, esas tres
+simplemente no van a estar disponibles hasta que lo hagas.
+
+Se instalaron con `--copy` (no symlink), para que las tres de Bret Fisher queden como
+archivos reales versionados en este repo en vez de depender de una caché local
+(`~/.agents/skills/`) que no viaja con el repo. Son MIT — la licencia completa está
+reproducida en [`skills/THIRD_PARTY_NOTICES.md`](skills/THIRD_PARTY_NOTICES.md), como
+pide esa licencia.
+
+Antes de instalar cualquiera, se revisó el reporte de riesgo que imprime la CLI (Gen /
+Socket / Snyk) y, para la única con "Med Risk" (`github-actions-workflow-pro`, por sus
+scripts que manejan tokens de `gh auth`), se leyó el código de los tres scripts
+(`scan.sh`, `validate.sh`, `run-stats.py`) — no exponen tokens en logs/trazas y tratan
+el texto de PRs/commits como dato no confiable, no como instrucciones. Mismo criterio
+(licencia + revisión de riesgo + lectura de scripts) aplicá antes de instalar cualquier
+skill de terceros nueva.
+
+**Para agregar más:**
+
+```bash
+npx skills find <palabra-clave>                 # buscar en skills.sh
+npx skills find react --owner vercel            # buscar dentro de un owner
+npx skills add <owner/repo> --list              # ver qué trae un repo antes de instalar
+npx skills add <owner/repo> --skill <nombre> -a claude-code -g --copy -y
+```
+
+**Para actualizar las ya instaladas:** `npx skills update -g`.
 
 ## Por qué no hay Engram / memoria persistente acá
 

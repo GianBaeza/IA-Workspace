@@ -58,6 +58,21 @@ not a wall of text.
 | `zod` | Schema validation for forms and Server Action inputs |
 | `vitest-playwright` | Test setup and patterns |
 
+Sourced from the open [Agent Skills](https://skills.sh) ecosystem via `npx skills`
+(Vercel Engineering, `vercel-labs/agent-skills`) — granular, actively-maintained rule
+sets that go deeper than hand-written notes can for fast-moving performance guidance:
+
+| Skill | Covers |
+|---|---|
+| `vercel-react-best-practices` | 60+ React/Next.js rules: server-side data fetching (parallel fetching, `after()`, caching, auth in Server Actions), rendering, re-render, async, and bundle-size categories |
+| `vercel-composition-patterns` | Component architecture: compound components, avoiding boolean-prop proliferation, React 19 ref-as-prop |
+| `web-design-guidelines` | UI/UX review against Web Interface Guidelines — accessibility, performance, interaction — for "review my UI" / "check accessibility" / "audit design" style requests |
+
+To update these to the authors' latest version: `npx skills update -g`. These three are
+from `vercel-labs/agent-skills`, which has no LICENSE file — they're installed locally
+here but intentionally not committed to the (public) IA-Workspace repo; see
+`claude-code/README.md` in that repo for the install command on a new machine.
+
 ## Workflow
 
 1. Check for an existing plan/spec in the repo (e.g. `openspec/`, `.opencode/architecture/`)

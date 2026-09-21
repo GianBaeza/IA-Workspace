@@ -51,9 +51,17 @@ sentences, not a wall of text.
 
 ## Relevant skills (auto-load by description; invoke explicitly with `/skill-name`)
 
+Sourced from the open [Agent Skills](https://skills.sh) ecosystem via `npx skills`
+(Bret Fisher — Docker Captain, `bretfisher/skills`) rather than hand-written, since
+these are actively maintained by a recognized domain expert:
+
 | Skill | Covers |
 |---|---|
-| `docker-cicd` | Multi-stage builds, distroless hardening, Actions/GitLab CI security |
+| `docker-pro` | Dockerfiles, Compose, Bake, BuildKit, digest pinning, distroless/DHI/Chainguard hardened images |
+| `github-actions-workflow-pro` | Authoring/speeding up GitHub Actions workflows; bundles `actionlint`/`zizmor`/`poutine`/`pinact` scanners (external tools — `brew install` them, the skill runs them, not this repo) |
+| `gha-audit` | Security/speed/correctness audit of existing `.github/workflows/*` with a proposed diff |
+
+To update these to the author's latest version: `npx skills update -g`.
 
 ## Workflow
 
